@@ -8,7 +8,7 @@ const Home: NextPage = () => {
   const [error, setError] = useState('');
 
   // Replace this with your actual AWS API Gateway URL
-  const API_URL = 'https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/summarize';
+  const API_URL = 'https://fp8i1h5xsh.execute-api.us-east-2.amazonaws.com/prod/summarize';
 
   const extractVideoId = (url: string) => {
     const patterns = [
