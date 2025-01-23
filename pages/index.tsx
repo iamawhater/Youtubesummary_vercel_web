@@ -5,8 +5,10 @@ const Home: NextPage = () => {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState('');
+  const [error, setError] = useState('');
 
-  const API_URL = 'https://503js9xajf.execute-api.us-east-2.amazonaws.com/prod/summarize'; // Replace with your AWS API URL
+  // Replace this with your actual AWS API Gateway URL
+  const API_URL = 'https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/summarize';
 
   const extractVideoId = (url: string) => {
     const patterns = [
@@ -24,30 +26,36 @@ const Home: NextPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setSummary('');
+
     if (!extractVideoId(url)) {
-      alert('Please enter a valid YouTube URL');
+      setError('Please enter a valid YouTube URL');
       return;
     }
 
     setLoading(true);
     try {
+      console.log('Sending request to:', API_URL);  // Debug log
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Origin': window.location.origin,
         },
         body: JSON.stringify({ url }),
       });
 
-      const data = await response.json();
-      
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to process video');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
+      const data = await response.json();
       setSummary(data.summary);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to process video. Please try again.');
+      console.error('Error:', error);  // Debug log
+      setError(error instanceof Error ? error.message : 'Failed to process video. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -82,12 +90,20 @@ const Home: NextPage = () => {
                   </button>
                 </form>
               </div>
+              
+              {error && (
+                <div className="py-4">
+                  <p className="text-red-600">{error}</p>
+                </div>
+              )}
+
               {loading && (
                 <div className="py-4 text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
                   <p className="mt-2 text-gray-600">Processing video... This may take a few minutes.</p>
                 </div>
               )}
+
               {summary && (
                 <div className="py-4">
                   <h3 className="text-lg font-semibold mb-2">Summary:</h3>
